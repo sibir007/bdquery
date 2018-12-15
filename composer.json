@@ -1,0 +1,14 @@
+{
+    "name": "dima/bd-query",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Dima Sibiryakov",
+            "email": "sibiriakoff2006@yandex.ru"
+        }
+    ],
+    "require": {},
+	"autoload": {
+		"psr-4": {"App\\": "src/"}
+	}
+}
