@@ -8,20 +8,45 @@ class Query
 {
 private $pdo;
 private $where = [];
+public $data = ['select' => '*',	'where' => []]; 
 
-
-public function __construct($pdo, $table, $where = [])
+public function __construct($pdo, $table, $data = null) 
 {
-$this->pdo = $pdo;
-$this->table = $table;
-$this->where = $where;
+	$this->pdo = $pdo;
+	$this->table = $table;
+	if ($data) {
+		$this->data = $data;
+	}
+}
+
+
+public function count()
+{
+	return count($this->all());
+}
+
+
+public function map($func)
+{
+	$arr = $this->all();
+	return array_map($func, $arr);
+}
+
+
+
+public function select(...$arguments)
+{
+	$data['select'] = $this->data['select'] . ', ' . implode(', ', $arguments);
+	$data['where'] = $this->data['where'];
+	return $this->getClone($data);
 }
 
 
 public function where($key, $value)
 {
-$where = [$key => $value];
-return $this->getClone($where);
+	$data['where'] = array_merge($this->data['where'], [$key => $value]);
+	$data['select'] = $this->data['select'];
+	return $this->getClone($data);
 }
 
 
@@ -31,37 +56,33 @@ return $this->pdo->query($this->toSql())->fetchAll();
 }
 
 
+
+
 public function toSql()
 {
-	// BEGIN (write your solution here)
-	$where = $this->where;
-	if (count($where) != 0){
-		$pdo = $this->pdo;
-		$whereParamArr = array_reduce(array_keys($this->where), function ($acc, $item) use ($where, $pdo) { 
-		// $qoteColl = $pdo->quote($item);
-		$qoteParam = $pdo->quote($where[$item]);
-		$qoteColl = ($item);
-		// $qoteParam = ($where[$item]);
-		$acc[] = "$qoteColl = $qoteParam";
-		return $acc;
-		}, []);
-	$whereParamStr = implode(" And ", $whereParamArr);
-	$sql = "SELECT * FROM $this->table WHERE $whereParamStr;";
-	echo $sql;
-	} else {
-	$sql = "SELECT * FROM $this->table;";
+	$sqlParts = [];
+	$sqlParts[] = "SELECT {$this->data['select']}  FROM {$this->table}";
+	if ($this->data['where']) {
+		$where = $this->buildWhere();
+		$sqlParts[] = "WHERE $where";
 	}
-	return $sql; 
-// END
+	return implode(' ', $sqlParts);
 }
 
 
-private function getClone($where)
+private function buildWhere()
 {
-$mergedData = array_merge($this->where, $where);
-return new self($this->pdo, $this->table, $mergedData);
+	return implode(' AND ', array_map(function ($key, $value) {
+		$quotedValue = $this->pdo->quote($value);
+		return "$key = $quotedValue";
+	}, array_keys($this->data['where']), $this->data['where']));
 }
+
+private function getClone($data)
+{
+	return new self($this->pdo, $this->table, $data);
 }
 
 
 
+}
