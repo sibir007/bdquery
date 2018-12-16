@@ -34,7 +34,12 @@ $mapper = new \App\UserMapper($pdo);
 $mapper->save($userr);
 
 $selUser = $pdo->query("select * from users3");
-var_dump($selUser->fetchAll());
+echo "<pre>";
+print_r($selUser->fetchAll());
+echo "<pre>";
+
 $selPhoto = $pdo->query("select * from user_photos");
-var_dump($selPhoto->fetchAll());
+echo "<pre>";
+print_r($selPhoto->fetchAll());
+echo "<pre>";
 
