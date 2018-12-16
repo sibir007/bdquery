@@ -1,7 +1,11 @@
 <?php
 include __DIR__ .  '/../vendor/autoload.php';
 
-print_r(\PDO::getAvailableDrivers());
+$userr = new \App\User('Dima');
+$userr->addPhoto('family', '/path/to/photo/family');
+$userr->addPhoto('party', '/path/to/photo/party');
+$userr->addPhoto('friends', '/path/to/photo/friends');
+
 $opt = [
 		\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
 		\PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC ];
@@ -13,34 +17,24 @@ $charset = 'UTF8';
 $dsn = "pgsql:host=$host;dbname=$db";
 $pdo = new \PDO($dsn, $user, $pass, $opt);
 
-$pdo->exec("drop table users2");
-$pdo->exec("create table users2 (id integer, name text, age integer)");
+$pdo->exec("drop table if exists users3");
+$pdo->exec("drop table if exists user_photos");
 
-$pdo->exec("insert into users2 values (3, 'adel', 22)");
-$pdo->exec("insert into users2 values (3, 'ivan', 22)");
-$pdo->exec("insert into users2 values (3, 'pavel', 22)");
-$pdo->exec("insert into users2 values (3, 'kola', 21)");
-$pdo->exec("insert into users2 values (3, 'iula', 22)");
-$pdo->exec("insert into users2 values (33333, 'dkj45adel')");
-$query = new \App\Query($pdo, 'users2');
-//echo "data";
-//print_r($query->data);
+$pdo->exec("drop sequence if exists serial1");
+$pdo->exec("create sequence serial1");
 
-$query = $query->where('id', '3'); //->where('age', 21);
-//echo "data past";
-//print_r($query->data);
+$pdo->exec("drop sequence if exists serial2");
+$pdo->exec("create sequence serial2");
 
-$query = $query->select('id', 'name');
-$query->count() == sizeof($query->all());
-$coll = $query->map(function ($row) {
-    return $row['id'] . '-' . $row['name'];
-});
-print_r($coll); 
+$pdo->exec("create table users3 (id integer primary key default nextval('serial1'), name text)");
 
-// SELECT * FROM users WHERE from = 'github' AND id = 3 AND age = 21;
-//print_r($query->data);
-//$query->toSql();
-//$res = $query->all();
-//echo "<pre> sql   ";
-//print_r($res);
-//echo "<pre> sql";
+$pdo->exec("create table user_photos (id integer primary key default nextval('serial2'), user_id integer, name text, filepath text)");
+
+$mapper = new \App\UserMapper($pdo);
+$mapper->save($userr);
+
+$selUser = $pdo->query("select * from users3");
+var_dump($selUser->fetchAll());
+$selPhoto = $pdo->query("select * from user_photos");
+var_dump($selPhoto->fetchAll());
+
